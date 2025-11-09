@@ -3,7 +3,7 @@ import {
   createNote,
   deleteNote,
   getNoteById,
-  getNotes,
+  getAllNotes,
   updateNote,
 } from '../controllers/notesController.js';
 
