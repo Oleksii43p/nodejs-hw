@@ -9,7 +9,7 @@ export const getAllNotes = async (req, res) => {
   const skip = (page - 1) * perPage;
 
   // Створюємо базовий запит до колекції
-  const notesQuery = Note.find();
+  const notesQuery = Note.find({ userId: req.user._id });
 
   // Будуємо фільтр
   if (tag) {
@@ -24,18 +24,18 @@ export const getAllNotes = async (req, res) => {
   }
 
   // Виконуємо одразу два запити паралельно
-  const [totalItems, notes] = await Promise.all([
+  const [totalNotes, notes] = await Promise.all([
     notesQuery.clone().countDocuments(),
     notesQuery.skip(skip).limit(perPage),
   ]);
 
   // Обчислюємо загальну кількість «сторінок»
-  const totalPages = Math.ceil(totalItems / perPage);
+  const totalPages = Math.ceil(totalNotes / perPage);
 
   res.status(200).json({
     page,
     perPage,
-    totalItems,
+    totalNotes,
     totalPages,
     notes,
   });
@@ -44,7 +44,10 @@ export const getAllNotes = async (req, res) => {
 // Отримати одноієї нотатки за id
 export const getNoteById = async (req, res, next) => {
   const { noteId } = req.params;
-  const note = await Note.findById(noteId);
+  const note = await Note.findOne({
+    _id: noteId,
+    userId: req.user._id,
+  });
 
   if (!note) {
     next(createHttpError(404, 'Note not found'));
@@ -56,7 +59,7 @@ export const getNoteById = async (req, res, next) => {
 
 // Нова нотатка
 export const createNote = async (req, res) => {
-  const note = await Note.create(req.body);
+  const note = await Note.create({ ...req.body, userId: req.user._id });
   res.status(201).json(note);
 };
 
@@ -65,6 +68,7 @@ export const deleteNote = async (req, res, next) => {
   const { noteId } = req.params;
   const note = await Note.findOneAndDelete({
     _id: noteId,
+    userId: req.user._id,
   });
 
   if (!note) {
@@ -79,9 +83,13 @@ export const deleteNote = async (req, res, next) => {
 export const updateNote = async (req, res, next) => {
   const { noteId } = req.params;
 
-  const note = await Note.findOneAndUpdate({ _id: noteId }, req.body, {
-    new: true,
-  });
+  const note = await Note.findOneAndUpdate(
+    { _id: noteId, userId: req.user._id },
+    req.body,
+    {
+      new: true,
+    },
+  );
 
   if (!note) {
     next(createHttpError(404, 'Note not found'));
