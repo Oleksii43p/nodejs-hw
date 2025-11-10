@@ -57,7 +57,7 @@ export const loginUser = async (req, res, next) => {
 
 // Логаут користувача
 export const logoutUser = async (req, res, next) => {
-  try {
+  
   const { sessionId } = req.cookies;
 
   if (sessionId) {
@@ -69,9 +69,6 @@ export const logoutUser = async (req, res, next) => {
   res.clearCookie('refreshToken');
 
   res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
 };
 
 // Оновлення сесії
