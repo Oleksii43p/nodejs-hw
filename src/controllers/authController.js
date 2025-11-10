@@ -26,7 +26,7 @@ export const registerUser = async (req, res, next) => {
   const newSession = await createSession(newUser._id);
   setSessionCookies(res, newSession);
 
-  res.status(201).json({ newUser });
+  res.status(201).json(newUser);
 };
 
 // Авторизація користувача
@@ -42,7 +42,7 @@ export const loginUser = async (req, res, next) => {
   // Порівнюємо хеші паролів
   const isValidPassword = await bcrypt.compare(password, user.password);
   if (!isValidPassword) {
-    return next(createHttpError(401, 'Invalid Credentials'));
+    return next(createHttpError(401, 'Invalid сredentials'));
   }
 
   // Видаляємо стару сесію користувача
@@ -56,7 +56,8 @@ export const loginUser = async (req, res, next) => {
 };
 
 // Логаут користувача
-export const logoutUser = async (req, res) => {
+export const logoutUser = async (req, res, next) => {
+  try {
   const { sessionId } = req.cookies;
 
   if (sessionId) {
@@ -68,6 +69,9 @@ export const logoutUser = async (req, res) => {
   res.clearCookie('refreshToken');
 
   res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Оновлення сесії
